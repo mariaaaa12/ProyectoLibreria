@@ -194,13 +194,13 @@ if (isset($_GET['id'])) {
                                 <div class="form-field">
                                     <label for="emocion">¿Cómo te hizo sentir este libro?</label>
                                     <select name="emocion" id="emocion" class="h-full-width">
-                                        <option value="😄 Alegría">😄 Alegría</option>
-                                        <option value="😢 Tristeza">😢 Tristeza</option>
-                                        <option value="😠 Ira">😠 Ira</option>
-                                        <option value="😨 Miedo">😨 Miedo</option>
-                                        <option value="😲 Sorpresa">😲 Sorpresa</option>
-                                        <option value="😐 Neutral">😐 Neutral</option>
-                                        <option value="🤢 Asco">🤢 Asco</option>
+                                        <option value="joy">😄 Alegría</option>
+                                        <option value="sadness">😢 Tristeza</option>
+                                        <option value="anger">😠 Ira</option>
+                                        <option value="fear">😨 Miedo</option>
+                                        <option value="surprise">😲 Sorpresa</option>
+                                        <option value="neutral">😐 Neutral</option>
+                                        <option value="disgust">🤢 Desagrado</option>
                                     </select>
                                 </div>
 
@@ -213,14 +213,14 @@ if (isset($_GET['id'])) {
                         <?php
                     
                         if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
-                            $tipo_interaccion = $_POST['emocion'];
+                            $emocion = $_POST['emocion'];
                             // Ya fue obtenido desde la consulta arriba
                             $id_libro = $_GET['id']; // ID del libro desde la URL
-                            $fecha_interaccion = date('Y-m-d H:i:s');
+                            $fecha_emocion = date('Y-m-d H:i:s');
 
-                            if (!empty($tipo_interaccion) && !empty($id_usuario) && !empty($id_libro)) {
+                            if (!empty($emocion) && !empty($id_usuario) && !empty($id_libro)) {
                                 $stmt = $conn->prepare("INSERT INTO interacciones (id_libro, id_usuario, emocion, fecha_emocion) VALUES (?, ?, ?, ?)");
-                                $stmt->bind_param("iiss", $id_libro, $id_usuario, $tipo_interaccion, $fecha_interaccion);
+                                $stmt->bind_param("iiss", $id_libro, $id_usuario, $emocion, $fecha_emocion);
 
                                 if ($stmt->execute()) {
                                 echo '
