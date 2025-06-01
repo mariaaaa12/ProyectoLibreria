@@ -1,5 +1,33 @@
 <?php
 session_start();
+// Verificar que existan las variables de sesión necesarias para emoción
+if (isset($_SESSION['emocion'], $_SESSION['usuario_id'])) {
+    $emocion = escapeshellarg($_SESSION['emocion']);
+    $usuario_id = intval($_SESSION['usuario_id']);
+
+    // Ejecutar el script Python
+    $comando = "python recomendar_por_emocion.py $emocion $usuario_id";
+    $output = shell_exec($comando);
+
+    // Si ves símbolos raros, usa utf8_encode como prueba
+    $output_utf8 = utf8_encode($output);
+
+    $resultado_emocion = json_decode($output_utf8, true);
+
+    if (!is_array($resultado_emocion) || !isset($resultado_emocion['recomendaciones'])) {
+        $recomendaciones_emocion = [];
+        $error_emocion = true;
+        $debug_output = $output_utf8; // Para depuración
+    } else {
+        $recomendaciones_emocion = $resultado_emocion['recomendaciones'];
+        $error_emocion = false;
+    }
+} else {
+    $recomendaciones_emocion = [];
+    $error_emocion = false;
+}
+
+
 include("conexion.php");
 
 // Mostrar errores (solo durante pruebas)
@@ -54,7 +82,13 @@ if (isset($_GET['busqueda']) && !empty($_GET['busqueda'])) {
 }
 
 // Obtener todos los libros para la sección por géneros
-$sql = "SELECT * FROM libros ORDER BY genero, titulo ASC";
+$sql = "
+    SELECT * FROM (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY genero ORDER BY titulo ASC) AS fila
+        FROM libros
+    ) AS subconsulta
+    WHERE fila <= 10
+";
 $resultado = $conn->query($sql);
 
 $libros_por_genero = [];
@@ -225,68 +259,86 @@ while ($libro = $resultado->fetch_assoc()) {
 
 <!-- libros recomendados por emocion   -->
 <?php if (!empty($libros_recomendados)): ?>
-<div class="s-pageheader">
-    <div class="row">
-        <div class="column large-12">
-            <h1 class="page-title">
-                <span class="page-title__small-type">Siente, lee, conecta: Tinta, Páginas y Encuentros</span>
-                 Tu Biblioteca Emocional Comienza Aquí.
-            </h1>
-        </div>
-    </div>
-</div>
+    
 
-<section class="s-bricks s-bricks--half-top-padding">
-    <div class="masonry">
-        <div class="bricks-wrapper h-group">
-            <div class="grid-sizer"></div>
-            <div class="lines"><span></span><span></span><span></span></div>
-
-            <?php foreach ($libros_recomendados as $libro): ?>
-            <article class="brick entry" data-aos="fade-up">
-                <div class="entry__thumb">
-                    <a href="libro.php?id=<?php echo $libro['id_libro'] ?>" class="thumb-link">
-                        <img src="<?= htmlspecialchars($libro['imagen']) ?>" 
-                             srcset="<?= htmlspecialchars($libro['imagen']) ?> 1x, <?= htmlspecialchars($libro['imagen']) ?> 2x"
-                             alt="<?= htmlspecialchars($libro['titulo']) ?>">
-                    </a>
+    <?php if (isset($_SESSION['emocion'])): ?>
+         <div class="s-pageheader">
+            <div class="row">
+                <div class="column large-12">
+                    <h1 class="page-title">
+                        <span class="page-title__small-type">
+                            Siente, lee, conecta: Tinta, Páginas y Encuentros
+                        </span>
+                        Tu Biblioteca Emocional Comienza Aquí.
+                        Tu emoción de hoy: <em><?= htmlspecialchars($_SESSION['emocion']) ?></em>
+                    </h1>
                 </div>
-
-                <div class="entry__text">
-                    <div class="entry__header">
-                        <h1 class="entry__title">
-                            <a href="single-libro.php?id=<?= $libro['id_libro'] ?>">
-                                <?= htmlspecialchars($libro['titulo']) ?>
-                            </a>
-                        </h1>
-
-                        <div class="entry__meta">
-                            <span class="byline">Autor:
-                                <span class='author'>
-                                    <a href="#"><?= htmlspecialchars($libro['autor']) ?></a>
-                                </span>
-                            </span>
-                            <span class="cat-links">
-                                <a href="#"><?= htmlspecialchars($libro['genero']) ?></a>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="entry__excerpt">
-                        <p><?= htmlspecialchars($libro['descripcion']) ?></p>
-                    </div>
-                    <a href="libro.php?id=<?php echo $libro['id_libro']; ?>">Leer más</a>
-
-                </div>
-            </article>
-            <?php endforeach; ?>
-
+            </div>
         </div>
-    </div>
-</section>
+
+        <?php if ($error_emocion): ?>
+            <p>Error al obtener recomendaciones por emoción.</p>
+            <pre><?= htmlspecialchars($debug_output) ?></pre>
+
+        <?php elseif (count($recomendaciones_emocion) > 0): ?>
+            <section class="s-bricks s-bricks--half-top-padding">
+                <div class="masonry">
+                    <div class="bricks-wrapper h-group">
+                        <div class="grid-sizer"></div>
+                        <div class="lines"><span></span><span></span><span></span></div>
+
+                        <?php foreach (array_slice($recomendaciones_emocion, 0, 5) as $libro): ?>
+                            <article class="brick entry" data-aos="fade-up">
+                                <div class="entry__thumb">
+                                    <a href="libro.php?id=<?php echo $libro['id_libro'] ?>" class="thumb-link">
+                                        <img src="<?= htmlspecialchars($libro['imagen']) ?>" 
+                                            srcset="<?= htmlspecialchars($libro['imagen']) ?> 1x, <?= htmlspecialchars($libro['imagen']) ?> 2x"
+                                            alt="<?= htmlspecialchars($libro['titulo']) ?>">
+
+                                    </a>
+                                </div>
+
+                                <div class="entry__text">
+                                    <div class="entry__header">
+                                        <h1 class="entry__title">
+                                            <a href="single-libro.php?id=<?= $libro['id_libro'] ?>">
+                                                <?= htmlspecialchars($libro['titulo']) ?>
+                                            </a>
+                                        </h1>
+
+                                        <div class="entry__meta">
+                                            <span class="byline">Autor:
+                                                <span class="author">
+                                                    <a href="#"><?= htmlspecialchars($libro['autor']) ?></a>
+                                                </span>
+                                            </span>
+                                            <span class="cat-links">
+                                                <a href="#"><?= htmlspecialchars($libro['genero']) ?></a>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="entry__excerpt">
+                                        <p><?= htmlspecialchars($libro['descripcion']) ?></p>
+                                    </div>
+                                    <a href="libro.php?id=<?= $libro['id_libro'] ?>">Leer más</a>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+
+                    </div>
+                </div>
+            </section>
+
+        <?php else: ?>
+            <p>No se encontraron libros recomendados para esta emoción.</p>
+        <?php endif; ?>
+
+    <?php endif; ?>
+
 <?php endif; ?>
 
-        
+
 
         <!-- Libros por genero 
         ================================================== -->
@@ -308,6 +360,7 @@ while ($libro = $resultado->fetch_assoc()) {
 ?>
 
         <?php foreach ($libros_por_genero as $genero => $libros): ?>
+            
 <!-- título categoría lectura -->
 <div class="s-pageheader" id="<?= strtolower(str_replace(' ', '', $genero)) ?>">
     <div class="row">
