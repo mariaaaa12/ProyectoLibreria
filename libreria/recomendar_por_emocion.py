@@ -29,7 +29,7 @@ emocion_objetivo = mapa_emociones_esp.get(emocion_objetivo, emocion_objetivo)
 
 def obtener_conexion():
     return mysql.connector.connect(
-        host="localhost",
+        host="db",
         user="root",
         password="",
         database="libreria",
