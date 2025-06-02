@@ -50,7 +50,7 @@
 
                 <ul class="s-header__nav">
                     <li><a href="login.php" title="">Inicio Sesion</a></li>
-                    <li><a href="contacto.php" title="">Ayuda/Soporte</a></li>
+                    <li><a href="soporte.php" title="">Ayuda/Soporte</a></li>
                     <li><a href="nosotros.php" title="">Nosotros</a></li>
                     <li><a href="index.php" title="">volver</a></li>
                 </ul> <!-- end s-header__nav -->
