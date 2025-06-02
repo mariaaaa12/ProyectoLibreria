@@ -1,5 +1,6 @@
 version: '3.8'
 
+
 services:
   web:
     build: .
@@ -9,6 +10,8 @@ services:
       - .:/var/www/html
     depends_on:
       - db
+    networks:
+      - red_libreria
 
   db:
     image: mysql:5.7
@@ -17,4 +20,10 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: libreria
     ports:
-      - "3307:3306"
+      - "3307:3306"  # Usaste 3307 porque el 3306 estaba ocupado
+    networks:
+      - red_libreria
+
+networks:
+  red_libreria:
+    driver: bridge
