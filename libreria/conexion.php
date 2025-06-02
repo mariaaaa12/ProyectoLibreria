@@ -5,6 +5,10 @@ $password = "root";         // <- asegúrate que coincida con el que pusiste en 
 $dbname = "libreria";       // <- el nombre de la base de datos
 
 $conn = new mysqli($servername, $username, $password, $dbname);
+$result = $conn->query("SHOW TABLES");
+while ($row = $result->fetch_row()) {
+    echo "Tabla: " . $row[0] . "<br>";
+}
 
 // Verifica si falló la conexión
 if ($conn->connect_error) {
