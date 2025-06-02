@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     && a2enmod rewrite
 
+RUN docker-php-ext-install mysqli
 # Copia el código al contenedor
 COPY . /var/www/html/
 
