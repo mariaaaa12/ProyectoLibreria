@@ -1,8 +1,8 @@
 <?php
-$servername = "localhost";
+$servername = "db";         // <- el nombre del servicio de MySQL en docker-compose
 $username = "root";
-$password = "";
-$dbname = "libreria"; // el nombre de tu base de datos
+$password = "root";         // <- asegúrate que coincida con el que pusiste en docker-compose
+$dbname = "libreria";       // <- el nombre de la base de datos
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
