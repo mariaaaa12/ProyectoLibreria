@@ -1,31 +1,36 @@
-version: '3.8'
-
+version: "3.8"
 
 services:
   web:
     build: .
+    container_name: libreria-web
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
-      - .:/var/www/html
+      - ./src:/var/www/html
     depends_on:
       - db
     networks:
-      - red_libreria
+      - libreria-net
 
   db:
-    image: mysql:5.7
+    image: mysql:8
+    container_name: libreria-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: libreria
-      volumes:
-      - ./libreria.sql:/docker-entrypoint-initdb.d/libreria.sql
-    ports:
-      - "3307:3306"  # Usaste 3307 porque el 3306 estaba ocupado
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d
     networks:
-      - red_libreria
+      - libreria-net
+
+volumes:
+  db_data:
 
 networks:
-  red_libreria:
+  libreria-net:
     driver: bridge
